@@ -4,6 +4,7 @@ import base64
 from asyncio import Queue
 
 clients = set()
+global_websocket = None
 
 async def register(websocket):
     clients.add(websocket)
@@ -13,6 +14,11 @@ async def register(websocket):
     finally:
         clients.remove(websocket)
         print("Client disconnected.")
+        
+async def receive_message():
+    async for message in global_websocket:
+        print(f"Received message from client: {message}")
+        return
 
 async def send_image(image):
     # Periodically queue the image for sending every 5 seconds (adjust as needed)
@@ -31,6 +37,7 @@ async def send_image(image):
 
 async def handler(websocket, path):
     await register(websocket)
+    global_websocket = websocket
 
 async def start_server():
     # Start the WebSocket server

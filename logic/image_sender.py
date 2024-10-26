@@ -1,5 +1,5 @@
 import asyncio
-from server_module2 import start_server, send_image, clients
+from server_module2 import start_server, send_image, clients, receive_message
 
 class ImageSender:
     def __init__(self):
@@ -11,6 +11,9 @@ class ImageSender:
     async def close_clients(self):
         for client in clients:
             await client.close()
+            
+    async def read_message(self):
+        return await receive_message()
 
     async def send_image_to_clients(self, image):
         if clients:  # Ensure there are clients connected

@@ -39,6 +39,7 @@ class FrameExtractor:
             os.makedirs(output_dir)
 
         frames_pair = []
+        images = []
         
         while True:
             success, frame = video_capture.read()
@@ -48,6 +49,8 @@ class FrameExtractor:
                 break
 
             if frame_number % self.frame_skip == 0:
+                image_path = f'{output_dir}/frame_{image_counter}.jpg'
+                cv2.imwrite(image_path, frame)
                 frames_pair.append(frame)
                 image_counter += 1        
                 print("Saved frame:", image_counter)
@@ -57,7 +60,7 @@ class FrameExtractor:
                     self.dictionary[self.video_name] = score
                     print(f"Video: {self.video_name}; Score: {self.dictionary[self.video_name]}")
                     frames_pair = []
-                # await self.frames_queue.put(frame_file)
+                    images.append(image_path)
 
             frame_number += 1
 
@@ -65,3 +68,4 @@ class FrameExtractor:
         end_time = time.time()
         elapsed_time = end_time - start_time
         print(f"Elapsed time: {elapsed_time:.2f} seconds")
+        return images
