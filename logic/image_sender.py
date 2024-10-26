@@ -1,23 +1,20 @@
 import asyncio
-from server_module2 import start_server, send_image, clients, receive_message
+from server_module2 import start_server, send_image, clients
 
 class ImageSender:
-    def __init__(self):
-        self.server_task = asyncio.create_task(self.start_server())  # Start the server upon initialization
+    def start_server(self, lock):
+        start_server(lock)
 
-    async def start_server(self):
-        await start_server()
-
-    async def close_clients(self):
+    def close_clients(self):
         for client in clients:
-            await client.close()
+            client.close()
             
-    async def read_message(self):
-        return await receive_message()
+    # async def read_message(self):
+    #     return await receive_message()
 
-    async def send_image_to_clients(self, image):
+    def send_image_to_clients(self, frames):
         if clients:  # Ensure there are clients connected
-            await send_image(image)
+            asyncio.run(send_image(frames))
             print(f"Image sent to {len(clients)} clients.")
         else:
             print("No clients connected to send the image.")

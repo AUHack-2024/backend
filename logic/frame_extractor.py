@@ -3,6 +3,7 @@ import os
 import time
 import queue
 import asyncio
+import base64
 
 from frame_processing import get_scores
 
@@ -40,6 +41,7 @@ class FrameExtractor:
 
         frames_pair = []
         images = []
+        self.dictionary[self.video_name] = []
         
         while True:
             success, frame = video_capture.read()
@@ -57,7 +59,11 @@ class FrameExtractor:
                 
                 if(len(frames_pair) == 2):
                     score = get_scores(frames_pair[0], frames_pair[1])
-                    self.dictionary[self.video_name] = score
+                    
+                    with open(image_path, "rb") as image_file:
+                        image_data = base64.b64encode(image_file.read()).decode('utf-8')
+                        
+                    self.dictionary[self.video_name].append(Frame(image_data, score))
                     print(f"Video: {self.video_name}; Score: {self.dictionary[self.video_name]}")
                     frames_pair = []
                     images.append(image_path)
@@ -69,3 +75,15 @@ class FrameExtractor:
         elapsed_time = end_time - start_time
         print(f"Elapsed time: {elapsed_time:.2f} seconds")
         return images
+
+
+class Frame:
+    def __init__(self, image, score):
+        self.image = image
+        self.score = score
+        
+    def to_dict(self):
+        return {
+            "score": self.score,
+            "image": self.image
+        }

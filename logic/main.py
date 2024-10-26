@@ -2,32 +2,41 @@ import asyncio
 from image_sender import ImageSender
 from frame_extractor import FrameExtractor
 import os
-import sys
-import time
+import threading
 
+lock = threading.Lock()
+is_dictionary_ready = False
 
-class MainApp:
-    def __init__(self):
-        print(sys.path)
-        sys.path.insert(0, os.path.join(sys.path[0], 'videos'))
-        self.videos = os.listdir('videos')
+def extract_frames(videos, frames_queue, dictionary, image_sender):
+    global is_dictionary_ready
     
-        self.frames_queue = asyncio.Queue()
-        self.image_sender = ImageSender()
+    for video in videos:
+        frame_extractor = FrameExtractor(video, frames_queue, dictionary)
+        images = frame_extractor.extract_frames()
         
-        print(f"Videos found: {self.videos}")
-        self.dictionary = {v:0 for v in self.videos}
+        is_dictionary_ready = True
+        image_sender.send_image_to_clients(dictionary[video])
         
-        for video in self.videos:
-            self.frame_extractor = FrameExtractor(video, self.frames_queue, self.dictionary)
-            images = self.frame_extractor.extract_frames()
-            
-            for image in images:
-                self.image_sender.send_image_to_clients(image)
-                while self.image_sender.read_message() != "All done!":
-                    time.sleep(0.05)
-            
-            
-if __name__ == "__main__":
-    MainApp()
+    print("All videos processed. Exiting.")
 
+async def main():
+    # Set up paths and verify video folder
+    videos_path = 'videos'
+    if not os.path.exists(videos_path):
+        raise FileNotFoundError(f"The directory {videos_path} does not exist.")
+    
+    videos = os.listdir(videos_path)
+    frames_queue = asyncio.Queue()
+    image_sender = ImageSender()
+    
+    dictionary = {v: 0 for v in videos}
+    server_thread = threading.Thread(target=image_sender.start_server, args=(lock,))
+    computation_thread = threading.Thread(target=extract_frames, args=(videos, frames_queue, dictionary, image_sender))
+    
+    server_thread.start()
+    computation_thread.start()
+
+    print(f"Videos found: {videos}")
+
+# Run the main async function
+asyncio.run(main())

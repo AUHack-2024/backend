@@ -1,10 +1,10 @@
 import asyncio
 import websockets
 import base64
-from asyncio import Queue
+import json
 
+from frame_extractor import Frame
 clients = set()
-global_websocket = None
 
 async def register(websocket):
     clients.add(websocket)
@@ -14,32 +14,45 @@ async def register(websocket):
     finally:
         clients.remove(websocket)
         print("Client disconnected.")
-        
-async def receive_message():
-    async for message in global_websocket:
-        print(f"Received message from client: {message}")
-        return
 
-async def send_image(image):
-    # Periodically queue the image for sending every 5 seconds (adjust as needed)
+
+async def send_image(frames):
     try:
-        with open(image, "rb") as image_file:
-            image_data = base64.b64encode(image_file.read()).decode('utf-8')
-            
-            for client in clients:
-                await client.send(image_data)
+        serialized_frames = serialize_frames(frames)
+        
+        for client in clients:
+                await client.send(serialized_frames)
                 
-            print("Image queued to be sent to clients.")
+        print("Image queued to be sent to clients.")
     except FileNotFoundError:
         print("Image file not found.")
     except Exception as e:
         print(f"Error in send_image: {e}")
 
-async def handler(websocket, path):
-    await register(websocket)
-    global_websocket = websocket
 
-async def start_server():
-    # Start the WebSocket server
-    server = await websockets.serve(handler, "0.0.0.0", 8080)
-    print("Server started at ws://0.0.0.0:8080")
+
+async def handler(websocket, path, lock):
+    await register(websocket)
+
+def start_server(lock):
+    async def server():
+        async with websockets.serve(lambda ws, path: handler(ws, path, lock), "0.0.0.0", 8080):
+            print("Server started at ws://0.0.0.0:8080")
+            await asyncio.Future()  # Run forever
+
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(server())
+
+
+
+
+
+
+def serialize_frames(frames):
+    str = "["
+    
+    for frame in frames:
+        str += f"{{\"image\": \"{frame.image}\", \"score\": {frame.score}}},"
+    
+    return str[:-1] + "]"
