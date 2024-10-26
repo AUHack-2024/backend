@@ -22,7 +22,7 @@ class WebSocketImageServer:
     async def send_image(self):
         """Encodes and queues an image for sending to clients."""
         try:
-            with open("pictures/still/frame_v1.0.0.jpg", "rb") as image_file:
+            with open("pictures/still/frame_v1.0.0_0.jpg", "rb") as image_file:
                 image_data = base64.b64encode(image_file.read()).decode('utf-8')
                 await self.message_queue.put(image_data)
                 print("Image queued to be sent to clients.")
