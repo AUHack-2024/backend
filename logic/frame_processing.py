@@ -1,6 +1,5 @@
 import jax.numpy as jnp
 import jax.scipy as jsp
-from PIL import Image
 import jax
 
 
@@ -81,11 +80,16 @@ def norm_mse(z, slope=80):
 
 
 def get_scores(frame1, frame2, w1=0.8, w2=0.2):
+    from jax.lib import xla_bridge
+    print(xla_bridge.get_backend().platform)
+    frame1 = jnp.array(frame1)
+    print(frame1.shape)
+    frame2 = jnp.array(frame2)
     frame1 = frame1[:, :, :3]
     frame2 = frame2[:, :, :3]
     assert w1 + w2 == 1, "Weights must sum to 1"
-    f1 = resize_square(normalize_lumincance(to_grayscale(frame1)))
-    f2 = resize_square(normalize_lumincance(to_grayscale(frame2)))
+    f1 = resize_square(normalize_lumincance(to_grayscale(frame1)), 1000)
+    f2 = resize_square(normalize_lumincance(to_grayscale(frame2)), 1000)
 
     ssim_score = ssim(f1, f2)
     mse_score = mse(f1, f2)
