@@ -78,3 +78,14 @@ def mse(img_1, img_2):
 
 def norm_mse(z, slope=80):
     return 1/(z/slope + 1)
+
+
+def get_scores(frame1, frame2, w1=0.8, w2=0.2):
+    assert w1 + w2 == 1, "Weights must sum to 1"
+    f1 = resize_square(normalize_lumincance(to_grayscale(frame1)))
+    f2 = resize_square(normalize_lumincance(to_grayscale(frame2)))
+
+    ssim_score = ssim(f1, f2)
+    mse_score = mse(f1, f2)
+    norm_mse_score = norm_mse(mse_score)
+    return w1 * ssim_score + w2 * norm_mse_score
