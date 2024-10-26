@@ -81,6 +81,8 @@ def norm_mse(z, slope=80):
 
 
 def get_scores(frame1, frame2, w1=0.8, w2=0.2):
+    frame1 = frame1[:, :, :3]
+    frame2 = frame2[:, :, :3]
     assert w1 + w2 == 1, "Weights must sum to 1"
     f1 = resize_square(normalize_lumincance(to_grayscale(frame1)))
     f2 = resize_square(normalize_lumincance(to_grayscale(frame2)))
