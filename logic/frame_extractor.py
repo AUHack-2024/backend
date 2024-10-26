@@ -1,47 +1,54 @@
 import cv2
 import os
 import time
-import argparse
+import queue
+import asyncio
 
-parser = argparse.ArgumentParser(description='Extract frames from a video.')
-parser.add_argument('--video-name', type=str, default='still.mp4', help='Name of the video file')
-
-args = parser.parse_args()
-
-video_name = args.video_name + '.mp4'
-start_time = time.time()
-
-video_location = 'videos'
-video_path = os.path.join(video_location, video_name)
-video_capture = cv2.VideoCapture(f"{video_path}")
-frame_skip = 5
-print(f"Starting the process. Video path: {video_location}/{video_name}")
-
-
-if not video_capture.isOpened():
-    print("Error: Could not open video.")
+class FrameExtractor:
     
-frame_number = 0
-frame_skip = 5
-image_counter = 0
-while True:
-    success, frame = video_capture.read()
+    def __init__(self, video_name, frames_queue):
+        self.video_name = video_name + '.mp4'
+        self.frames_queue = frames_queue
+        self.video_location = 'videos'
+        self.video_path = os.path.join(self.video_location, self.video_name)
+        self.frame_skip = 5
+        
 
-    if not success:
-        print("End of video or error reading the frame.")
-        break
+    async def extract_frames(self):
+        start_time = time.time()
+        print(f"Starting the process. Video path: {self.video_location}/{self.video_name}")
 
-    if(frame_number % frame_skip == 0):
-        output_dir = f'pictures/{video_name.split(".")[0]}'
+        video_capture = cv2.VideoCapture(self.video_path)
+
+        if not video_capture.isOpened():
+            print("Error: Could not open video.")
+            return
+
+        frame_number = 0
+        image_counter = 0
+        output_dir = f'pictures/{self.video_name.split(".")[0]}'
+        
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
-        cv2.imwrite(f'{output_dir}/frame_v1.0.0_{image_counter}.jpg', frame)
-        image_counter += 1        
-        print("next itera")
-    frame_number += 1
 
-video_capture.release()
+        while True:
+            success, frame = video_capture.read()
 
-end_time = time.time()
-elapsed_time = end_time - start_time
-print(f"Elapsed time: {elapsed_time:.2f} seconds")
+            if not success:
+                print("End of video or error reading the frame.")
+                break
+
+            if frame_number % self.frame_skip == 0:
+                frame_file = f"{output_dir}/frame_{image_counter}.jpg"
+                
+                cv2.imwrite(frame_file, frame)
+                image_counter += 1        
+                print("Saved frame:", image_counter)
+                await self.frames_queue.put(frame_file)
+
+            frame_number += 1
+
+        video_capture.release()
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        print(f"Elapsed time: {elapsed_time:.2f} seconds")

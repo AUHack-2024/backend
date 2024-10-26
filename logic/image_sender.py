@@ -1,37 +1,20 @@
-import base64
-import sys
-import os
-import keyboard
 import asyncio
-import threading
+from server_module2 import start_server, send_image, clients
 
-# Add the parent directory of 'server_module2' to the Python path
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+class ImageSender:
+    def __init__(self):
+        self.server_task = asyncio.create_task(self.start_server())  # Start the server upon initialization
 
-# Import the necessary functions or classes from server_module2
-from server_module2 import run_server, send_image, message_handler, clients, message_queue
+    async def start_server(self):
+        await start_server()
 
-# Initialize and run the WebSocket server in the background
-server_thread = threading.Thread(target=run_server)
-server_thread.start()
+    async def close_clients(self):
+        for client in clients:
+            await client.close()
 
-
-async def close_clients():
-    for client in clients:
-        await client.close()
-
-try:
-    while True:
-        if keyboard.is_pressed('x'):
-            print("Closing connection...")
-            # Close the server gracefully
-            asyncio.run(close_clients())
-            break
-        elif keyboard.is_pressed('Enter'):
-            asyncio.run(send_image())
-            asyncio.run(message_handler())
+    async def send_image_to_clients(self, image):
+        if clients:  # Ensure there are clients connected
+            await send_image(image)
             print(f"Image sent to {len(clients)} clients.")
-except KeyboardInterrupt:
-    print("Program interrupted. Closing connection...")
-    # Close the server gracefully
-    asyncio.run(close_clients())
+        else:
+            print("No clients connected to send the image.")
