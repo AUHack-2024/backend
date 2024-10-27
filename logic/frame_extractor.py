@@ -18,15 +18,14 @@ class FrameExtractor:
         self.frame_skip = 5
         
 
-    def extract_frames(self, my_fps=5):
+    def extract_frames(self, my_fps=3):
         start_time = time.time()
         print(f"Starting the process. Video path: {self.video_location}/{self.video_name}")
 
-        
         video_capture = cv2.VideoCapture(self.video_path)
         fps = video_capture.get(cv2.CAP_PROP_FPS)
         
-        self.frame_skip = fps // my_fps
+        self.frame_skip = int(fps // my_fps)
 
         if not video_capture.isOpened():
             print("Error: Could not open video.")
@@ -39,7 +38,7 @@ class FrameExtractor:
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
-        frames_pair = []
+        previous_frame = None
         images = []
         self.dictionary[self.video_name] = []
         
@@ -53,20 +52,26 @@ class FrameExtractor:
             if frame_number % self.frame_skip == 0:
                 image_path = f'{output_dir}/frame_{image_counter}.jpg'
                 cv2.imwrite(image_path, frame)
-                frames_pair.append(frame)
-                image_counter += 1        
                 print("Saved frame:", image_counter)
+                images.append(image_path)
                 
-                if(len(frames_pair) == 2):
-                    score = get_scores(frames_pair[0], frames_pair[1])
+                
+                if previous_frame is not None:
+                    score = get_scores(previous_frame, frame)
+                    print(f"Frame pair: {image_counter - 1} and {image_counter}")
+                    
                     
                     with open(image_path, "rb") as image_file:
                         image_data = base64.b64encode(image_file.read()).decode('utf-8')
                         
-                    self.dictionary[self.video_name].append({"image": image_data, "score": score.item()})
-                    # print(f"Video: {self.video_name}; Score: {self.dictionary[self.video_name]}")
-                    frames_pair = []
-                    images.append(image_path)
+                    self.dictionary[self.video_name].append({
+                        "image": image_data,
+                        "score": score.item()
+                    })
+                    print(f"Video: {self.video_name}; Score: {score.item()}")
+
+                previous_frame = frame
+                image_counter += 1
 
             frame_number += 1
 

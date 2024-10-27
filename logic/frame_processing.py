@@ -38,7 +38,7 @@ def get_tiles(img, subdiv=5):
     
     return jnp.stack(tiles)
 
-def ssim(img_1, img_2, subdiv=10):
+def ssim(img_1, img_2, subdiv=20):
     def get_ssim_tile(img_1, img_2):
         mu_x = jnp.mean(img_1)
         mu_y = jnp.mean(img_2)
@@ -79,7 +79,7 @@ def norm_mse(z, slope=80):
     return 1/(z/slope + 1)
 
 
-def get_scores(frame1, frame2, w1=0.8, w2=0.2):
+def get_scores(frame1, frame2, w1=0.75, w2=0.25):
     from jax.lib import xla_bridge
     print(xla_bridge.get_backend().platform)
     frame1 = jnp.array(frame1)
@@ -94,4 +94,4 @@ def get_scores(frame1, frame2, w1=0.8, w2=0.2):
     ssim_score = ssim(f1, f2)
     mse_score = mse(f1, f2)
     norm_mse_score = norm_mse(mse_score)
-    return w1 * ssim_score + w2 * norm_mse_score
+    return w1 * ssim_score + w2 * (norm_mse_score)
