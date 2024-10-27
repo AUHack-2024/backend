@@ -3,7 +3,6 @@ import websockets
 import base64
 import json
 
-from frame_extractor import Frame
 clients = set()
 
 async def register(websocket):
@@ -16,18 +15,16 @@ async def register(websocket):
         print("Client disconnected.")
 
 
-async def send_image(frames):
+async def send_video_info(video_info):
     try:
-        serialized_frames = serialize_frames(frames)
-        
         for client in clients:
-                await client.send(serialized_frames)
+                await client.send(video_info)
                 
         print("Image queued to be sent to clients.")
     except FileNotFoundError:
         print("Image file not found.")
     except Exception as e:
-        print(f"Error in send_image: {e}")
+        print(f"Error in send_video_info: {e}")
 
 
 
@@ -43,16 +40,3 @@ def start_server(lock):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     loop.run_until_complete(server())
-
-
-
-
-
-
-def serialize_frames(frames):
-    str = "["
-    
-    for frame in frames:
-        str += f"{{\"image\": \"{frame.image}\", \"score\": {frame.score}}},"
-    
-    return str[:-1] + "]"

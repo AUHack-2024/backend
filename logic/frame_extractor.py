@@ -63,7 +63,7 @@ class FrameExtractor:
                     with open(image_path, "rb") as image_file:
                         image_data = base64.b64encode(image_file.read()).decode('utf-8')
                         
-                    self.dictionary[self.video_name].append(Frame(image_data, score))
+                    self.dictionary[self.video_name].append({"image": image_data, "score": score.item()})
                     print(f"Video: {self.video_name}; Score: {self.dictionary[self.video_name]}")
                     frames_pair = []
                     images.append(image_path)
@@ -75,15 +75,3 @@ class FrameExtractor:
         elapsed_time = end_time - start_time
         print(f"Elapsed time: {elapsed_time:.2f} seconds")
         return images
-
-
-class Frame:
-    def __init__(self, image, score):
-        self.image = image
-        self.score = score
-        
-    def to_dict(self):
-        return {
-            "score": self.score,
-            "image": self.image
-        }

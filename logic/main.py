@@ -15,7 +15,29 @@ def extract_frames(videos, frames_queue, dictionary, image_sender):
         images = frame_extractor.extract_frames()
         
         is_dictionary_ready = True
-        image_sender.send_image_to_clients(dictionary[video])
+        
+        frames = dictionary[video]
+        
+        if len(frames) > 10:
+            average_by_group = []
+            group = []
+            
+            for i in range(len(frames)):
+                group.append(frames[i].score)
+                if i % 10 == 0:
+                    average_by_group.append(sum(group) / len(group))
+                    group = []
+
+            if group:
+                average_by_group.append(sum(group) / len(group))
+                
+            video_info = {"video": frames, "best": max(average_by_group)}
+        else:
+            # less then 10 frames, send the the first group as the best
+            video_info = {"video": frames, "best": 1}
+        
+        print(f"Video info: {video_info}")
+        image_sender.send_video_info_to_clients(video_info)
         
     print("All videos processed. Exiting.")
 
