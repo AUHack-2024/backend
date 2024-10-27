@@ -64,7 +64,7 @@ class FrameExtractor:
                         image_data = base64.b64encode(image_file.read()).decode('utf-8')
                         
                     self.dictionary[self.video_name].append({"image": image_data, "score": score.item()})
-                    print(f"Video: {self.video_name}; Score: {self.dictionary[self.video_name]}")
+                    # print(f"Video: {self.video_name}; Score: {self.dictionary[self.video_name]}")
                     frames_pair = []
                     images.append(image_path)
 
