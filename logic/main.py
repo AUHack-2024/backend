@@ -1,20 +1,16 @@
 import asyncio
-from image_sender import ImageSender
 from frame_extractor import FrameExtractor
 import os
+import json
 import threading
+from server_module import start_server, send_video_info, clients
 
 lock = threading.Lock()
-is_dictionary_ready = False
 
-def extract_frames(videos, frames_queue, dictionary, image_sender):
-    global is_dictionary_ready
-    
+def extract_frames(videos, dictionary):
     for video in videos:
-        frame_extractor = FrameExtractor(video, frames_queue, dictionary)
-        images = frame_extractor.extract_frames()
-        
-        is_dictionary_ready = True
+        frame_extractor = FrameExtractor(video, dictionary)
+        frame_extractor.extract_frames()
         
         frames = dictionary[video]
         
@@ -39,24 +35,28 @@ def extract_frames(videos, frames_queue, dictionary, image_sender):
             # less then 10 frames, send the the first group as the best
             video_info = {"video": frames, "best": 1}
             
-            
-        image_sender.send_video_info_to_clients(video_info)
+        video_info = json.dumps(video_info)
+
+        if clients:
+            asyncio.run(send_video_info(video_info))
+            print(f"Image sent to {len(clients)} clients.")
+        else:
+            print("No clients connected to send the image.")
         
     print("All videos processed. Exiting.")
+    
 
-async def main():
+def main():
     # Set up paths and verify video folder
     videos_path = 'videos'
     if not os.path.exists(videos_path):
         raise FileNotFoundError(f"The directory {videos_path} does not exist.")
     
     videos = os.listdir(videos_path)
-    frames_queue = asyncio.Queue()
-    image_sender = ImageSender()
     
     dictionary = {v: 0 for v in videos}
-    server_thread = threading.Thread(target=image_sender.start_server, args=(lock,))
-    computation_thread = threading.Thread(target=extract_frames, args=(videos, frames_queue, dictionary, image_sender))
+    server_thread = threading.Thread(target=start_server, args=(lock,))
+    computation_thread = threading.Thread(target=extract_frames, args=(videos, dictionary))
     
     server_thread.start()
     computation_thread.start()
@@ -64,4 +64,4 @@ async def main():
     print(f"Videos found: {videos}")
 
 # Run the main async function
-asyncio.run(main())
+main()

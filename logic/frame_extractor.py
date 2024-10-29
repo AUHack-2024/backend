@@ -9,9 +9,8 @@ from frame_processing import get_scores
 
 class FrameExtractor:
     
-    def __init__(self, video_name, frames_queue, dictionary):
+    def __init__(self, video_name, dictionary):
         self.video_name = video_name
-        self.frames_queue = frames_queue
         self.video_location = 'videos'
         self.dictionary = dictionary
         self.video_path = os.path.join(self.video_location, self.video_name)
