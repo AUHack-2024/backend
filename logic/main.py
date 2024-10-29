@@ -31,11 +31,14 @@ def extract_frames(videos, frames_queue, dictionary, image_sender):
             if group:
                 average_by_group.append(sum(group) / len(group))
                 
-            best_index = average_by_group.index(max(average_by_group)) + 1
+            best_index = average_by_group.index(min(average_by_group)) + 1
+            print(f"Average scores for: {average_by_group}; Best group: {best_index}")
+            
             video_info = {"video": frames, "best": best_index}
         else:
             # less then 10 frames, send the the first group as the best
             video_info = {"video": frames, "best": 1}
+            
             
         image_sender.send_video_info_to_clients(video_info)
         
