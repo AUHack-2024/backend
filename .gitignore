@@ -3,3 +3,4 @@
 /pictures_webcam
 temp.md
 *.mp4
+*/__pycache__/

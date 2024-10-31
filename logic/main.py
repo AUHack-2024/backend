@@ -3,6 +3,7 @@ from frame_extractor import FrameExtractor
 import os
 import json
 import threading
+import time
 from server_module import start_server, send_video_info, clients
 
 lock = threading.Lock()
@@ -63,5 +64,7 @@ def main():
 
     print(f"Videos found: {videos}")
 
-# Run the main async function
+start_time = time.time()
 main()
+end_time = time.time()
+print(f"Execution time: {end_time - start_time} seconds.")

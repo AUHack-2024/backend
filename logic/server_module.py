@@ -31,7 +31,7 @@ async def handler(websocket, path, lock):
 
 def start_server(lock):
     async def server():
-        async with websockets.serve(lambda ws, path: handler(ws, path, lock), "0.0.0.0", 8080):
+        async with websockets.serve(lambda ws, path: handler(ws, path, lock), "0.0.0.0", 80):
             print("Server started at ws://0.0.0.0:8080")
             await asyncio.Future()  # Run forever
 
